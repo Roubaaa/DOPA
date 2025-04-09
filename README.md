@@ -58,11 +58,7 @@ To detect wellpads in a new image:
 python ml_model/detect.py path/to/your/image.jpg
 ```
 
-The script will output a JSON result with:
-- Whether wellpads were detected
-- Percentage of image covered by wellpads
-- Number of wellpads found
-- Bounding boxes for each wellpad
+The script will output a Mask
 
 ## Model Details
 
@@ -126,9 +122,6 @@ yarn start
 ### Frontend Features
 
 - Upload satellite imagery for wellpad detection
-- View detection results with bounding boxes
-- See percentage of image covered by wellpads
-- View historical detection results
 - Responsive design for desktop and mobile
 
 ### Screenshots
