@@ -9,6 +9,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 
 # Today's date.
 today = str(date.today())
+# NOTE The images are stored in OneDrive - Please download the images and store them
 dir = 'C:/Users/User/OneDrive/ML'  # Link to the directory containing the images: https://1drv.ms/f/c/774cc792b602f58c/EhsIOD--_rRDhUISOW_uS2YBk02ZGYbITX2jVrkO_GCZZw?e=LTYRdB
 
 # Create results directory if it doesn't exist
@@ -22,13 +23,13 @@ data = WellpadDataset().get(files).shuffle(5000)
 splitter = DatasetSplitter(data)
 splitter.summary()
 
-# Usage:
+# Create the model
 unet = UNet()
 unet.summary()
-unet.plot_model()
+#unet.plot_model()
 
 # View an Image and Mask
-# NOTE: Some images do not contain a 
+# NOTE: Some images do not contain a oil pad - some are very similar to wellpad (e.g. water bodies)
 """
 for img, msk in data.take(1):
   show_image(img,msk)
@@ -67,11 +68,3 @@ history = unet.model.fit(
     callbacks = [aug(),model_checkpoint, csv_logger, early_stopping])
 
 plot_training_metrics(history, model_epochs, save_dir=dir_result)
-
-# Get the final accuracy for training and validation
-overall_training_accuracy = history.history['accuracy'][-1]
-overall_validation_accuracy = history.history['val_accuracy'][-1]
-
-# Print the overall accuracy
-print(f"Overall Training Accuracy: {overall_training_accuracy}")
-print(f"Overall Validation Accuracy: {overall_validation_accuracy}")
