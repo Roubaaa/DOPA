@@ -1,0 +1,94 @@
+2025-04-09 22:51:54,135 - INFO - Model loaded successfully
+2025-04-09 22:51:54,136 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 22:51:54,136 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:35:43,172 - INFO - Model loaded successfully
+2025-04-09 23:35:43,172 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:35:43,172 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:35:43,191 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://30.65.12.45:3000
+2025-04-09 23:35:43,191 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-09 23:35:43,193 - INFO -  * Restarting with stat
+2025-04-09 23:35:45,948 - INFO - Model loaded successfully
+2025-04-09 23:35:45,948 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:35:45,948 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:35:45,954 - WARNING -  * Debugger is active!
+2025-04-09 23:35:45,954 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:36:06,522 - INFO -  * Detected change in 'C:\\Users\\User\\Desktop\\DOPA\\ml_model\\detect.py', reloading
+2025-04-09 23:36:06,956 - INFO -  * Restarting with stat
+2025-04-09 23:36:09,771 - INFO - Model loaded successfully
+2025-04-09 23:36:09,772 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:36:09,772 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:36:09,773 - WARNING -  * Debugger is active!
+2025-04-09 23:36:09,778 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:36:13,145 - INFO -  * Detected change in 'C:\\Users\\User\\Desktop\\DOPA\\ml_model\\detect.py', reloading
+2025-04-09 23:36:13,492 - INFO -  * Restarting with stat
+2025-04-09 23:36:16,298 - INFO - Model loaded successfully
+2025-04-09 23:36:16,298 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:36:16,298 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:36:16,304 - WARNING -  * Debugger is active!
+2025-04-09 23:36:16,305 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:36:25,589 - INFO - Model loaded successfully
+2025-04-09 23:36:25,589 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:36:25,589 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:36:25,603 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://30.65.12.45:5000
+2025-04-09 23:36:25,603 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-09 23:36:25,603 - INFO -  * Restarting with stat
+2025-04-09 23:36:28,407 - INFO - Model loaded successfully
+2025-04-09 23:36:28,407 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:36:28,407 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:36:28,412 - WARNING -  * Debugger is active!
+2025-04-09 23:36:28,413 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:37:45,914 - INFO -  * Detected change in 'C:\\Users\\User\\Desktop\\DOPA\\ml_model\\detect.py', reloading
+2025-04-09 23:37:46,371 - INFO -  * Restarting with stat
+2025-04-09 23:37:46,774 - INFO -  * Detected change in 'C:\\Users\\User\\Desktop\\DOPA\\ml_model\\detect.py', reloading
+2025-04-09 23:37:47,175 - INFO -  * Restarting with stat
+2025-04-09 23:37:49,300 - INFO - Model loaded successfully
+2025-04-09 23:37:49,300 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:37:49,300 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:37:49,305 - WARNING -  * Debugger is active!
+2025-04-09 23:37:49,307 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:37:50,016 - INFO - Model loaded successfully
+2025-04-09 23:37:50,016 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:37:50,016 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:37:50,021 - WARNING -  * Debugger is active!
+2025-04-09 23:37:50,022 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:37:59,816 - INFO -  * Detected change in 'C:\\Users\\User\\Desktop\\DOPA\\ml_model\\detect.py', reloading
+2025-04-09 23:38:00,215 - INFO -  * Detected change in 'C:\\Users\\User\\Desktop\\DOPA\\ml_model\\detect.py', reloading
+2025-04-09 23:38:00,235 - INFO -  * Restarting with stat
+2025-04-09 23:38:00,589 - INFO -  * Restarting with stat
+2025-04-09 23:38:03,075 - INFO - Model loaded successfully
+2025-04-09 23:38:03,076 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:38:03,076 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:38:03,076 - WARNING -  * Debugger is active!
+2025-04-09 23:38:03,082 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:38:03,382 - INFO - Model loaded successfully
+2025-04-09 23:38:03,382 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:38:03,382 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:38:03,387 - WARNING -  * Debugger is active!
+2025-04-09 23:38:03,387 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:38:12,196 - INFO - 30.65.12.45 - - [09/Apr/2025 23:38:12] "[33mGET / HTTP/1.1[0m" 404 -
+2025-04-09 23:38:12,254 - INFO - 30.65.12.45 - - [09/Apr/2025 23:38:12] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-04-09 23:40:43,318 - INFO - Model loaded successfully
+2025-04-09 23:40:43,318 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:40:43,318 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:40:43,332 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://30.65.12.45:5000
+2025-04-09 23:40:43,332 - INFO - [33mPress CTRL+C to quit[0m
+2025-04-09 23:40:43,337 - INFO -  * Restarting with stat
+2025-04-09 23:40:46,254 - INFO - Model loaded successfully
+2025-04-09 23:40:46,254 - INFO - Model input shape: (None, 256, 256, 3)
+2025-04-09 23:40:46,254 - INFO - Model output shape: (None, 256, 256, 1)
+2025-04-09 23:40:46,258 - WARNING -  * Debugger is active!
+2025-04-09 23:40:46,258 - INFO -  * Debugger PIN: 136-270-570
+2025-04-09 23:41:27,845 - INFO - Received image file: image_1005.png
+2025-04-09 23:41:27,861 - INFO - Image shape: (256, 256, 3)
+2025-04-09 23:41:29,516 - INFO - Detection completed. Mask shape: (256, 256)
+2025-04-09 23:41:29,520 - INFO - Successfully processed image
+2025-04-09 23:41:29,520 - INFO - 127.0.0.1 - - [09/Apr/2025 23:41:29] "POST /api/detect HTTP/1.1" 200 -
