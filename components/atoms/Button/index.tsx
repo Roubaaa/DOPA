@@ -2,11 +2,12 @@ import useMobileDeviceDetection from 'hooks/useMobileDetection'
 import React, { forwardRef, MouseEventHandler } from 'react'
 interface ButtonProps {
   value: string
-  onClick?: MouseEventHandler<HTMLButtonElement>
+  onClick?: MouseEventHandler<HTMLButtonElement> | (() => Promise<void>)
   size?: 'normal' | 'small'
   style?: 'light' | 'outline' | 'solid'
   color?: 'white' | 'primary'
   radius?: 'pill' | 'rounded'
+  disabled?: boolean
 }
 const Button = forwardRef(
   (
@@ -17,6 +18,7 @@ const Button = forwardRef(
       style = 'solid',
       color = 'primary',
       radius = 'rounded',
+      disabled = false,
     }: ButtonProps,
     ref: React.LegacyRef<HTMLButtonElement>
   ) => {
@@ -66,9 +68,10 @@ const Button = forwardRef(
         <button
           className={`${getSizeStyles()} ${getStyleStyles()} ${getRadiusStyles()} transition-all select-none ${
             isMobile ? 'cursor-default' : 'cursor-pointer'
-          }`}
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={onClick}
           ref={ref}
+          disabled={disabled}
         >
           {value}
         </button>

@@ -1,0 +1,68 @@
+# Stage 1: Install Python dependencies
+FROM python:3.9-slim AS python-deps
+
+WORKDIR /app
+
+# Install build tools and system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    pkg-config \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt /app/requirements.txt
+
+# Install Python dependencies with retry
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Final runtime image
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install runtime dependencies in a single layer
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from build stage
+COPY --from=python-deps /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=python-deps /usr/local/bin /usr/local/bin
+
+# Create necessary directories
+RUN mkdir -p /app/uploads /app/ml_model/results /app/.matplotlib
+
+# Copy model file and verify it exists
+COPY ml_model/results/2025-04-09_wellpad_model_.keras /app/ml_model/results/
+RUN test -f /app/ml_model/results/2025-04-09_wellpad_model_.keras || (echo "Model file not found" && exit 1)
+
+# Copy application code
+COPY ml_model /app/ml_model
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV MODEL_PATH=/app/ml_model/results/2025-04-09_wellpad_model_.keras
+ENV UPLOAD_FOLDER=/app/uploads
+ENV FLASK_APP=ml_model.app
+ENV FLASK_ENV=development
+ENV HOST=0.0.0.0
+ENV PORT=5000
+ENV TF_ENABLE_ONEDNN_OPTS=0
+ENV MPLCONFIGDIR=/app/.matplotlib
+
+# Expose the port
+EXPOSE 5000
+
+# Health check with increased timeout
+HEALTHCHECK --interval=30s --timeout=60s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# Start the application
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000"] 

@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:5000
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:5000
+    networks:
+      - app-network
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=ml_model.app
+      - FLASK_ENV=development
+      - MODEL_PATH=/app/ml_model/results/2025-04-09_wellpad_model_.keras
+      - UPLOAD_FOLDER=/app/uploads
+      - HOST=0.0.0.0
+      - PORT=5000
+      - TF_ENABLE_ONEDNN_OPTS=0
+      - MPLCONFIGDIR=/tmp/.matplotlib
+    volumes:
+      - ./uploads:/app/uploads
+      - ./ml_model:/app/ml_model:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://backend:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: python -m flask run --host=0.0.0.0 --port=5000
+
+networks:
+  app-network:
+    driver: bridge 

@@ -5,7 +5,8 @@ import FormData from 'form-data'
 import fetch from 'node-fetch'
 
 // Get Python backend URL from environment variable
-const PYTHON_BACKEND_URL = process.env.PYTHON_BACKEND_URL || 'http://localhost:5000/api/detect'
+const PYTHON_BACKEND_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/detect`
+console.log('PYTHON_BACKEND_URL:', PYTHON_BACKEND_URL)
 
 export const config = {
   api: {
@@ -17,12 +18,15 @@ export const config = {
 async function checkBackendConnection() {
   try {
     console.log('Checking Python backend connection...')
-    const response = await fetch(PYTHON_BACKEND_URL, {
-      method: 'OPTIONS',
+    const healthUrl = `${process.env.NEXT_PUBLIC_API_URL}/health`
+    console.log('Health check URL:', healthUrl)
+    const response = await fetch(healthUrl, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       }
     })
+    console.log('Health check response:', response.status)
     return response.ok
   } catch (error) {
     console.error('Python backend connection check failed:', error)
@@ -31,11 +35,16 @@ async function checkBackendConnection() {
 }
 
 // Function to retry failed requests
-async function fetchWithRetry(url: string, options: any, retries = 3, delay = 1000) {
+async function fetchWithRetry(url: string, options: any, retries = 5, delay = 2000) {
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`Attempting to connect to Python backend (attempt ${i + 1}/${retries})...`)
-      const response = await fetch(url, options)
+      console.log('Request URL:', url)
+      console.log('Request options:', JSON.stringify(options, null, 2))
+      const response = await fetch(url, {
+        ...options,
+        timeout: 30000, // 30 second timeout
+      })
       if (response.ok) {
         return response
       }

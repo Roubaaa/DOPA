@@ -1,0 +1,89 @@
+# Build stage for Next.js frontend
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    libc6-compat \
+    git \
+    libpng-dev \
+    autoconf \
+    automake \
+    libtool \
+    nasm \
+    && npm config set registry https://registry.npmjs.org/ \
+    && npm config set strict-ssl false \
+    && npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set cache /tmp/.npm
+
+# Set Node.js memory limit
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies with retries and error handling
+RUN npm install --legacy-peer-deps --prefer-offline --no-audit || \
+    (echo "First install attempt failed, retrying..." && \
+     npm cache clean --force && \
+     npm install --legacy-peer-deps --prefer-offline --no-audit)
+
+# Copy the rest of the frontend code
+COPY . .
+
+# Configure TypeScript to be less strict during build
+RUN echo '{"compilerOptions": {"strict": false, "skipLibCheck": true, "noEmit": true, "incremental": true}}' > tsconfig.build.json
+
+# Build the Next.js application with error handling
+RUN NEXT_TELEMETRY_DISABLED=1 npm run build || \
+    (echo "Build failed, retrying with clean cache..." && \
+     rm -rf .next && \
+     NEXT_TELEMETRY_DISABLED=1 npm run build)
+
+# Production stage for frontend
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    libpng-dev
+
+# Copy built files from builder
+COPY --from=frontend-builder /app/.next ./.next
+COPY --from=frontend-builder /app/public ./public
+COPY --from=frontend-builder /app/package*.json ./
+COPY --from=frontend-builder /app/next.config.js ./
+
+# Configure npm for production
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set strict-ssl false && \
+    npm config set cache /tmp/.npm && \
+    npm config set legacy-peer-deps true
+
+# Set Node.js memory limit for production
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
+# Install production dependencies only
+RUN npm install --production --legacy-peer-deps --prefer-offline --no-audit || \
+    (echo "Production install failed, retrying..." && \
+     npm cache clean --force && \
+     npm install --production --legacy-peer-deps --prefer-offline --no-audit)
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
+CMD ["npm", "start"] 

@@ -77,17 +77,19 @@ const HowWeWork = () => {
           />
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="relative w-full h-[300px]">
-              <img
+              <Image
                 src={'/images/combined_loss.png'}
                 alt='Combined Loss Graph'
-                className="w-full h-full object-contain"
+                fill
+                style={{ objectFit: 'contain' }}
               />
             </div>
             <div className="relative w-full h-[300px]">
-              <img
+              <Image
                 src={'/images/dice_loss_metrics.png'}
                 alt='Dice Loss Metric Graph'
-                className="w-full h-full object-contain"
+                fill
+                style={{ objectFit: 'contain' }}
               />
             </div>
           </div>

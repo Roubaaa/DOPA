@@ -5,33 +5,13 @@ import logging
 from pathlib import Path
 import cv2
 import os
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import base64
-from io import BytesIO
-
-# Get configuration from environment variables
-PORT = int(os.getenv('PORT', '5000'))
-HOST = os.getenv('HOST', '0.0.0.0')
-MODEL_PATH = Path(os.getenv('MODEL_PATH', str(Path(__file__).parent / 'results' / '2025-04-09_wellpad_model_.keras')))
-ML_SERVICE_URL = os.getenv('ML_SERVICE_URL', 'http://localhost:3000/api/ml/detect')
-PYTHON_BACKEND_URL = os.getenv('PYTHON_BACKEND_URL', 'http://localhost:5000/api/detect')
-
-# Initialize Flask app
-app = Flask(__name__)
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:3000"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+logger = logging.getLogger(__name__)
 
 # Define custom loss functions
 @tf.keras.utils.register_keras_serializable()
@@ -50,28 +30,87 @@ def dice_loss(y_true, y_pred):
 def bce_dice_loss(y_true, y_pred):
     return tf.keras.losses.binary_crossentropy(y_true, y_pred) + dice_loss(y_true, y_pred)
 
-# Load the model
-try:
-    print(f"Attempting to load model from: {MODEL_PATH}")
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
+# Initialize model as None
+model = None
+
+def load_model():
+    """
+    Load the model with proper error handling and logging.
+    """
+    global model
+    if model is not None:
+        logger.info("Model already loaded")
+        return model
         
-    model = tf.keras.models.load_model(str(MODEL_PATH), 
-                                      custom_objects={
-                                          'bce_dice_loss': bce_dice_loss,
-                                          'dice_loss': dice_loss,
-                                          'dice_coeff': dice_coeff
-                                      })
-    print("Model loaded successfully")
-    print(f"Model input shape: {model.input_shape}")
-    print(f"Model output shape: {model.output_shape}")
-    logging.info("Model loaded successfully")
-    logging.info(f"Model input shape: {model.input_shape}")
-    logging.info(f"Model output shape: {model.output_shape}")
+    try:
+        # Get configuration from environment variables
+        MODEL_PATH = Path(os.getenv('MODEL_PATH', str(Path(__file__).parent / 'results' / '2025-04-09_wellpad_model_.keras')))
+        
+        logger.info(f"Attempting to load model from: {MODEL_PATH}")
+        if not MODEL_PATH.exists():
+            logger.warning(f"Model file not found at {MODEL_PATH}")
+            # Try alternative paths
+            alternative_paths = [
+                Path('/app/ml_model/results/2025-04-09_wellpad_model_.keras'),  # Docker container path
+                Path(__file__).parent / 'results' / '2025-04-09_wellpad_model_.keras',  # Local development path
+                Path('ml_model/results/2025-04-09_wellpad_model_.keras'),  # Relative path
+                Path('/app/ml_model/results/2025-04-09_wellpad_model_.keras')  # Absolute Docker path
+            ]
+            for path in alternative_paths:
+                if path.exists():
+                    MODEL_PATH = path
+                    logger.info(f"Found model at alternative path: {MODEL_PATH}")
+                    break
+            
+        if not MODEL_PATH.exists():
+            raise FileNotFoundError(f"Model file not found at any of the checked paths")
+            
+        # Verify file is readable
+        if not os.access(str(MODEL_PATH), os.R_OK):
+            raise PermissionError(f"No read permissions for model file at {MODEL_PATH}")
+            
+        # Log file details
+        logger.info(f"Model file size: {MODEL_PATH.stat().st_size} bytes")
+        logger.info(f"Model file permissions: {oct(MODEL_PATH.stat().st_mode)[-3:]}")
+        
+        # Try to read a small portion of the file to verify it's not corrupted
+        try:
+            with open(str(MODEL_PATH), 'rb') as f:
+                header = f.read(100)  # Read first 100 bytes
+                if not header:
+                    raise ValueError("Model file appears to be empty")
+        except Exception as e:
+            raise ValueError(f"Error reading model file: {str(e)}")
+            
+        # Load the model with custom objects
+        custom_objects = {
+            'bce_dice_loss': bce_dice_loss,
+            'dice_loss': dice_loss,
+            'dice_coeff': dice_coeff
+        }
+        
+        logger.info("Loading model with custom objects...")
+        model = tf.keras.models.load_model(str(MODEL_PATH), custom_objects=custom_objects)
+        
+        # Verify model was loaded correctly
+        if model is None:
+            raise ValueError("Model loaded but is None")
+            
+        logger.info("Model loaded successfully")
+        logger.info(f"Model input shape: {model.input_shape}")
+        logger.info(f"Model output shape: {model.output_shape}")
+        return model
+    except Exception as e:
+        logger.error(f"Error loading model: {str(e)}")
+        model = None
+        raise
+
+# Try to load the model on import
+try:
+    load_model()
 except Exception as e:
-    print(f"Error loading model: {str(e)}")
-    logging.error(f"Error loading model: {str(e)}")
-    model = None
+    logger.error(f"Failed to load model during import: {e}")
+    # Don't raise here, let the application handle it
 
 def preprocess_full_image(img, target_size=(256, 256)):
     """
@@ -80,141 +119,69 @@ def preprocess_full_image(img, target_size=(256, 256)):
     if not isinstance(img, np.ndarray):
         raise ValueError("Input image must be a NumPy array.")
     
-    img = Image.fromarray(img).convert("RGB").resize(target_size)
-    img = np.array(img)  # Convert PIL image back to array
-    img = tf.image.convert_image_dtype(img, dtype=tf.float32)  # Normalize to [0, 1]
+    try:
+        img = Image.fromarray(img).convert("RGB").resize(target_size)
+        img = np.array(img)  # Convert PIL image back to array
+        img = tf.image.convert_image_dtype(img, dtype=tf.float32)  # Normalize to [0, 1]
+        return img
+    except Exception as e:
+        logger.error(f"Error preprocessing image: {e}")
+        raise
 
-    return img  # No batch dimension yet
-
-def detect_wellpads(image, model, target_size=(256, 256), threshold=0.5):
+def detect_wellpads(image_path, target_size=(256, 256), threshold=0.5):
     """
     Detects wellpads in the image using the model. Processes the entire image without tiling.
     
     Parameters:
-        image (np.ndarray): Input image as a NumPy array.
-        model (tf.keras.Model): Trained segmentation model.
+        image_path (str): Path to the input image.
         target_size (tuple): Size to which the image should be resized.
         threshold (float): Threshold to convert prediction to binary mask.
 
     Returns:
-        np.ndarray: Binary mask with shape equal to original image, dtype=np.uint8.
+        dict: Dictionary containing the mask and overlay images as bytes.
     """
-    original_size = image.shape[:2]  # (height, width)
-    
-    input_image = preprocess_full_image(image, target_size)
-    input_tensor = tf.expand_dims(input_image, axis=0)  # Add batch dimension
-
-    prediction = model.predict(input_tensor, verbose=0)[0]
-    pred_mask = prediction[..., 0]  # Get the single-channel mask
-
-    # Resize mask back to original image size
-    pred_mask_resized = tf.image.resize(pred_mask[..., tf.newaxis], original_size, method='bilinear')
-    pred_mask_resized = tf.squeeze(pred_mask_resized, axis=-1).numpy()
-
-    # Apply threshold to get binary mask
-    binary_mask = (pred_mask_resized > threshold).astype(np.uint8) * 255
-
-    return binary_mask
-
-@app.route('/api/detect', methods=['POST', 'OPTIONS'])
-def detect():
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST')
-        return response
-
     try:
-        if 'image' not in request.files:
-            logging.error("No image file in request")
-            return jsonify({'error': 'No image file provided'}), 400
-            
-        file = request.files['image']
-        logging.info(f"Received image file: {file.filename}")
-        
-        # Read image
-        try:
-            img_bytes = file.read()
-            if not img_bytes:
-                logging.error("Empty image file")
-                return jsonify({'error': 'Empty image file'}), 400
-                
-            img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
-            if img is None:
-                logging.error("Failed to decode image")
-                return jsonify({'error': 'Failed to decode image'}), 400
-                
-            logging.info(f"Image shape: {img.shape}")
-        except Exception as e:
-            logging.error(f"Error reading image: {str(e)}")
-            return jsonify({'error': f'Failed to read image: {str(e)}'}), 400
-            
-        # Convert BGR to RGB
-        try:
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        except Exception as e:
-            logging.error(f"Error converting image: {str(e)}")
-            return jsonify({'error': f'Failed to convert image: {str(e)}'}), 400
-        
-        # Check if model is loaded
+        # Ensure model is loaded
         if model is None:
-            logging.error("Model is not loaded")
-            return jsonify({'error': 'Model is not loaded. Please check the model path and try again.'}), 500
+            load_model()
         
-        # Run detection
-        try:
-            print("Starting detection...")
-            mask = detect_wellpads(img_rgb, model)
-            print(f"Detection completed. Mask shape: {mask.shape}")
-            logging.info(f"Detection completed. Mask shape: {mask.shape}")
-        except Exception as e:
-            print(f"Error in detection: {str(e)}")
-            logging.error(f"Error in detection: {str(e)}")
-            return jsonify({'error': f'Detection failed: {str(e)}'}), 500
+        # Read the image
+        logger.info(f"Reading image from {image_path}")
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"Could not read image at {image_path}")
+        
+        # Convert BGR to RGB
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
+        # Preprocess the image
+        img_processed = preprocess_full_image(img, target_size)
+        
+        # Add batch dimension and predict
+        img_batch = tf.expand_dims(img_processed, axis=0)
+        logger.info("Running model prediction")
+        pred = model.predict(img_batch)
+        
+        # Remove batch dimension and threshold
+        pred = pred[0, :, :, 0]  # Remove batch and channel dimensions
+        mask = (pred > threshold).astype(np.uint8) * 255
+        
+        # Resize mask to original image size
+        mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
         
         # Create overlay
-        try:
-            overlay = img.copy()
-            overlay[mask == 255] = [0, 255, 0]  # Highlight detected regions in green
-        except Exception as e:
-            logging.error(f"Error creating overlay: {str(e)}")
-            return jsonify({'error': f'Failed to create overlay: {str(e)}'}), 500
+        overlay = img.copy()
+        overlay[mask > 0] = [255, 0, 0]  # Mark detected areas in red
         
-        # Convert results to base64
-        try:
-            _, mask_buffer = cv2.imencode('.png', mask)
-            _, overlay_buffer = cv2.imencode('.png', overlay)
-            
-            mask_base64 = base64.b64encode(mask_buffer).decode('utf-8')
-            overlay_base64 = base64.b64encode(overlay_buffer).decode('utf-8')
-            
-            print("Successfully processed image")
-            logging.info("Successfully processed image")
-            
-            response = jsonify({
-                'mask': mask_base64,
-                'overlay': overlay_base64
-            })
-            response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-            return response
-        except Exception as e:
-            logging.error(f"Error encoding results: {str(e)}")
-            return jsonify({'error': f'Failed to encode results: {str(e)}'}), 500
+        # Convert to bytes
+        _, mask_bytes = cv2.imencode('.png', mask)
+        _, overlay_bytes = cv2.imencode('.png', overlay)
         
+        logger.info("Detection completed successfully")
+        return {
+            'mask': mask_bytes.tobytes(),
+            'overlay': overlay_bytes.tobytes()
+        }
     except Exception as e:
-        print(f"Unexpected error in detection: {str(e)}")
-        logging.error(f"Unexpected error in detection: {str(e)}")
-        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
-
-if __name__ == '__main__':
-    try:
-        print(f"Starting Flask server on {HOST}:{PORT}...")
-        if model is None:
-            print("ERROR: Model failed to load. Server will not start.")
-            exit(1)
-        app.run(host=HOST, port=PORT, debug=True)
-    except Exception as e:
-        print(f"Error starting server: {str(e)}")
-        logging.error(f"Error starting server: {str(e)}")
-        exit(1)
+        logger.error(f"Error in detect_wellpads: {e}")
+        raise

@@ -7,7 +7,8 @@ import FormData from 'form-data'
 import fetch from 'node-fetch'
 
 // Get Python backend URL from environment variable
-const PYTHON_BACKEND_URL = process.env.PYTHON_BACKEND_URL || 'http://localhost:5000/api/detect'
+const PYTHON_BACKEND_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/detect`
+console.log('PYTHON_BACKEND_URL:', PYTHON_BACKEND_URL)
 
 export const config = {
   api: {

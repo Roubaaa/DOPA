@@ -182,10 +182,9 @@ const Services = () => {
                 <Button
                   value="Detect Wellpads"
                   onClick={handleDetect}
-                  variant="solid"
+                  style="solid"
                   color="primary"
                   disabled={!imageFile || isLoading}
-                  icon={false}
                 />
               </div>
             )}
@@ -214,20 +213,22 @@ const Services = () => {
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-center text-gray-400">Detection Mask</h3>
               <div className="relative w-full h-80 border border-gray-600 rounded-lg overflow-hidden bg-gray-900/50">
-                <img
+                <Image
                   src={`data:image/png;base64,${results.mask}`}
                   alt="Detection Mask"
-                  className="w-full h-full object-contain p-4"
+                  fill
+                  style={{ objectFit: 'contain', padding: '1rem' }}
                 />
               </div>
             </div>
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-center text-gray-400">Overlay</h3>
               <div className="relative w-full h-80 border border-gray-600 rounded-lg overflow-hidden bg-gray-900/50">
-                <img
+                <Image
                   src={`data:image/png;base64,${results.overlay}`}
                   alt="Overlay"
-                  className="w-full h-full object-contain p-4"
+                  fill
+                  style={{ objectFit: 'contain', padding: '1rem' }}
                 />
               </div>
             </div>
