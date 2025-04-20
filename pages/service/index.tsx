@@ -150,7 +150,7 @@ const Services = () => {
             <SelectGroup
               label=""
               options={[
-                { label: 'Wellpad Detection', value: 'wellpad' }
+                { label: 'Drill site Detection', value: 'wellpad' }
               ]}
               defaultValue="wellpad"
             />
